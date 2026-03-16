@@ -1,0 +1,30 @@
+{
+  "users": [
+    {
+      "id": "usr_source_demo",
+      "email": "source@example.com",
+      "password": "SourcePass123!",
+      "role": "source",
+      "displayName": "India Source Demo"
+    },
+    {
+      "id": "usr_viewer_demo",
+      "email": "viewer@example.com",
+      "password": "ViewerPass123!",
+      "role": "viewer",
+      "displayName": "Remote Viewer Demo"
+    }
+  ],
+  "videos": [
+    {
+      "id": "vid_demo_private",
+      "ownerUserId": "usr_source_demo",
+      "title": "Protected Product Demo",
+      "description": "Authenticated sample video metadata for private streaming MVP.",
+      "sourceUrl": "/api/protected-videos/vid_demo_private/file",
+      "mimeType": "video/mp4"
+    }
+  ],
+  "sessions": [],
+  "auditLogs": []
+}

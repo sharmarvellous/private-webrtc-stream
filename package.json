@@ -1,0 +1,10 @@
+{
+  "name": "private-stream-product",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start-source": "node scripts/start-source.mjs",
+    "start-viewer": "node scripts/start-viewer.mjs"
+  }
+}
