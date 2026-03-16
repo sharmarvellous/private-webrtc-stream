@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 const viewerClientDir = path.join(repoRoot, "viewer-client");
+const forwardedArgs = process.argv.slice(2);
 
 function getNpmCommand() {
   return process.platform === "win32" ? "npm.cmd" : "npm";
@@ -34,9 +35,19 @@ function ensureDependencies(projectDir) {
 
 ensureDependencies(viewerClientDir);
 
+const defaultArgs = ["--host", "0.0.0.0", "--strictPort"];
+const hasHostArg = forwardedArgs.some((arg) => arg === "--host" || arg.startsWith("--host="));
+const viteArgs = [
+  "run",
+  "start-viewer",
+  "--",
+  ...(hasHostArg ? [] : defaultArgs),
+  ...forwardedArgs
+];
+
 const child = spawn(
   getNpmCommand(),
-  ["run", "start-viewer", "--", "--host", "0.0.0.0", "--strictPort"],
+  viteArgs,
   {
     cwd: viewerClientDir,
     stdio: "inherit",
