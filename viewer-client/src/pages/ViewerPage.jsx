@@ -25,6 +25,7 @@ export function ViewerPage() {
 
   const autoConnectInFlightRef = useRef(false);
   const autoRequestedSessionIdRef = useRef(null);
+  const lastAutoConnectKeyRef = useRef(null);
   const {
     debugState,
     viewerState,
@@ -80,6 +81,7 @@ export function ViewerPage() {
     }
 
     autoRequestedSessionIdRef.current = sessionIdFromQuery;
+    lastAutoConnectKeyRef.current = null;
     setSessionIdInput(sessionIdFromQuery);
     setJoinState("pending");
     setAutoFlowEnabled(true);
@@ -114,8 +116,7 @@ export function ViewerPage() {
     if (
       !autoFlowEnabled ||
       !requestedSession?.id ||
-      viewerState === "viewing" ||
-      viewerState === "connecting"
+      viewerState !== "idle"
     ) {
       return;
     }
@@ -124,7 +125,19 @@ export function ViewerPage() {
       return;
     }
 
+    const autoConnectKey = [
+      requestedSession.id,
+      requestedSession.status,
+      requestedSession.lastOfferAt ?? "no-offer",
+      requestedSession.lastAnswerAt ?? "no-answer"
+    ].join(":");
+
+    if (lastAutoConnectKeyRef.current === autoConnectKey) {
+      return;
+    }
+
     autoConnectInFlightRef.current = true;
+    lastAutoConnectKeyRef.current = autoConnectKey;
     connectViewer(requestedSession)
       .catch(() => {})
       .finally(() => {
@@ -138,11 +151,8 @@ export function ViewerPage() {
     }
 
     const shouldPoll =
-      viewerState === "idle" ||
-      viewerState === "ended" ||
-      viewerState === "error" ||
       joinState === "pending" ||
-      joinState === "approved";
+      (viewerState === "idle" && !requestedSession.canView);
 
     if (!shouldPoll) {
       return;
@@ -162,6 +172,7 @@ export function ViewerPage() {
 
     await requestTask.run(async () => {
       setAutoFlowEnabled(true);
+      lastAutoConnectKeyRef.current = null;
       const normalizedSessionId = normalizeSessionReference(sessionIdInput);
       const result = await sessionApi.requestViewerAccess(accessToken, normalizedSessionId);
       setRequestedSession(result.session);
@@ -178,6 +189,7 @@ export function ViewerPage() {
 
     await connectTask.run(async () => {
       setAutoFlowEnabled(true);
+      lastAutoConnectKeyRef.current = null;
       const latest = await sessionApi.getSession(accessToken, requestedSession.id);
       setRequestedSession(latest.session);
       setJoinState(latest.session.canView ? "approved" : "pending");
@@ -235,6 +247,7 @@ export function ViewerPage() {
 
   function handleDisconnect() {
     setAutoFlowEnabled(false);
+    lastAutoConnectKeyRef.current = null;
     disconnectViewer();
   }
 
